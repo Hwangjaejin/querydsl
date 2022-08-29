@@ -16,6 +16,7 @@ spring:
       hibernate:
         #        show_sql: true      # SQL 로그를 console에 남김
         format_sql: true     # 쿼리를 포맷팅해서 보기좋게 해줌
+        use_sql_comments: true
 
   data:
     web:
