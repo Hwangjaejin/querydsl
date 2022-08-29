@@ -23,8 +23,12 @@ public class QuerydslBasicTest {
     @Autowired
     EntityManager em;
 
+    JPAQueryFactory queryFactory;
+
     @BeforeEach
     public void before() {
+        queryFactory = new JPAQueryFactory(em);
+
         Team teamA = new Team("teamA");
         Team teamB = new Team("teamB");
         em.persist(teamA);
@@ -53,7 +57,7 @@ public class QuerydslBasicTest {
     @Test
     public void startQuerydsl() {
         // member1 찾기
-        JPAQueryFactory queryFactory = new JPAQueryFactory(em); // 필드레벨로 올려도 된다. 동시성 이슈 없음.
+//        JPAQueryFactory queryFactory = new JPAQueryFactory(em); // 필드레벨로 올려도 된다. 동시성 이슈 없음.
 //        QMember m = new QMember("m"); // 어떤 QMember인지 구분하기 위해 파라미터를 넣어줘야 함.
 //        QMember m = QMember.member; // 아래처럼 static import로 사용하는 것 권장.
 
@@ -61,6 +65,33 @@ public class QuerydslBasicTest {
                 .select(member)
                 .from(member)
                 .where(member.username.eq("member1"))
+                .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    /**
+     * 검색 조건 쿼리
+     */
+    @Test
+    public void search() {
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.eq(10)))
+                .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void searchAndParam() {
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"),
+                        member.age.eq(10)
+                ) // 위 Test와 같이 and로 연결
                 .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
