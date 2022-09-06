@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 import study.querydsl.dto.MemberDto;
 import study.querydsl.dto.QMemberDto;
@@ -39,7 +40,7 @@ import static study.querydsl.entity.QMember.*;
 import static study.querydsl.entity.QTeam.*;
 
 @SpringBootTest
-@Transactional
+@Transactional // 트랜잭션 끝나면 rollback
 public class QuerydslBasicTest {
 
     @Autowired
@@ -719,5 +720,56 @@ public class QuerydslBasicTest {
 
     private BooleanExpression allEq(String usernameCond, Integer ageCond) {
         return usernameEq(usernameCond).and(ageEq(ageCond));
+    }
+
+    /**
+     * 수정, 삭제 벌크 연산
+     * 주의 : 벌크연산은 영속성 컨텍스트를 무시하고 DB로 바로 쿼리가 나감.(DB의 상태와 영속성 컨텍스트의 상태가 달라지게 됨)
+     * 따라서 벌크연산 후에는 항상 영속성 컨텍스트를 초기화 해야한다.
+     */
+    @Test
+//    @Commit // 롤백하고 싶지 않을 때
+    public void bulkUpdate() {
+        // 실행 전
+        // 영속성 컨텍스트:member1 -> DB:member1
+        // 영속성 컨텍스트:member2 -> DB:member2
+        // 영속성 컨텍스트:member3 -> DB:member3
+        // 영속성 컨텍스트:member4 -> DB:member4
+
+        long count = queryFactory
+                .update(member)
+                .set(member.username, "비회원")
+                .where(member.age.lt(28))
+                .execute();
+        em.flush();
+        em.clear();
+
+        // 실행 후(영속성 컨텍스트를 초기화 안했을 경우)
+        // 영속성 컨텍스트:member1 -> DB:비회원
+        // 영속성 컨텍스트:member2 -> DB:비회원
+        // 영속성 컨텍스트:member3 -> DB:member3
+        // 영속성 컨텍스트:member4 -> DB:member4
+
+        List<Member> fetch = queryFactory
+                .selectFrom(member)
+                .fetch();
+        // 다시 조회하면 DB에서 data를 가져와 영속성 컨텍스트에 넣어주는데 member1이 이미 영속성 컨텍스트에 있으면 DB에서 가져온 데이터를 버린다.
+        // 영속성 컨텍스트가 항상 우선권을 가진다.
+    }
+
+    @Test
+    public void bulkAdd() {
+        long count = queryFactory
+                .update(member)
+                .set(member.age, member.age.add(1))
+                .execute();
+    }
+
+    @Test
+    public void bulkDelete() {
+        long count = queryFactory
+                .delete(member)
+                .where(member.age.gt(18))
+                .execute();
     }
 }
