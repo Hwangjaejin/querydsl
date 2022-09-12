@@ -4,7 +4,7 @@ server:
 # 별도의 설정이 없으면 스프링부트가 메모리 모드로 전환시킴. (아래 전체가 다 없어도 테스트 가능)
 spring:
   profiles:
-    active: local
+    active: test
   datasource:
 #    url: jdbc:h2:mem:test # jdbc:h2:mem:test => 메모리 DB 모드. h2 database 안띄워도 실행됨.
     url: jdbc:h2:tcp://localhost/~/querydsl
