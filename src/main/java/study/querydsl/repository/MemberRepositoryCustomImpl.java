@@ -112,7 +112,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 );
 
 //        return PageableExecutionUtils.getPage(content, pageable, () -> countQuery.fetchCount());
-        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount);
+        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchCount); // count 쿼리가 필요하면 나가고 안필요하면 안날림.
     }
 
     private BooleanExpression usernameEq(String username) {
