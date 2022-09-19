@@ -99,7 +99,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // count 쿼리를 최적화 할 수 있다.
+        // count 쿼리를 최적화 할 수 있다. (count 쿼리를 분리)
         JPAQuery<Member> countQuery = queryFactory
                 .select(member)
                 .from(member)
